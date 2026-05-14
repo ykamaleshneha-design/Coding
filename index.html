@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Photo Studio & Cloud Gallery</title>
+    <style>
+        /* CSS STYLING START */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background-color: #0f0f12;
+            color: #f1f1f1;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 10px;
+        }
+
+        header h1 {
+            color: #00ffcc;
+            font-size: 2.8rem;
+            text-shadow: 0 0 15px rgba(0,255,204,0.3);
+        }
+
+        .main-layout {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        @media (min-width: 992px) {
+            .main-layout {
+                grid-template-columns: 450px 1fr;
+            }
+        }
+
+        /* Studio Panel (Left Side) */
+        .studio-panel {
+            background: #18181c;
+            padding: 25px;
+            border-radius: 20px;
+            border: 1px solid #2a2a32;
+            height: fit-content;
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            aspect-ratio: 4/3;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror Effect */
+        }
+
+        .control-group {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        label {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: -5px;
+        }
+
+        select, button {
+            width: 100%;
+            padding: 12px 18px;
+            background: #22222a;
+            border: 1px solid #3a3a45;
+            color: #fff;
+            border-radius: 10px;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        select:focus {
+            border-color: #00ffcc;
+        }
+
+        .btn-capture {
+            background: linear-gradient(135deg, #00ffcc, #0099ff);
+            color: #000;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+
+        .btn-capture:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,255,204,0.4);
+        }
+
+        /* Gallery Panel (Right Side) */
+        .gallery-panel {
+            background: #18181c;
+            padding: 25px;
+            border-radius: 20px;
+            border: 1px solid #2a2a32;
+        }
+
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #2a2a32;
+        }
+
+        .album-tabs {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            background: #22222a;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            border: 1px solid transparent;
+        }
+
+        .tab.active {
+            background: rgba(0,255,204,0.1);
+            border-color: #00ffcc;
+            color: #00ffcc;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .photo-card {
+            background: #22222a;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #2a2a32;
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .card-details {
+            padding: 10px;
+            font-size: 0.8rem;
+            color: #888;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .card-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            opacity: 0;
+            transition: 0.3s ease;
+        }
+
+        .photo-card:hover .card-overlay {
+            opacity: 1;
+        }
+
+        .action-btn {
+            width: auto;
+            padding: 8px 15px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+
+        .btn-dl { background: #00ffcc; color: #000; border: none; }
+        .btn-del { background: #ff3366; color: #fff; border: none; }
+
+        #canvas { display: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>📸 Pro Image Studio & Gallery</h1>
+    </header>
+
+    <div class="main-layout">
+        <!-- Live Camera Studio Box -->
+        <div class="studio-panel">
+            <div class="video-wrapper">
+                <video id="video" autoplay playsinline></video>
+            </div>
+
+            <div class="control-group">
+                <!-- Advanced Filters Selector -->
+                <label>Select Premium Filter:</label>
+                <select id="filter-select">
+                    <option value="none">Normal (Standard)</option>
+                    <option value="grayscale(100%) contrast(120%)">Vintage B&W</option>
+                    <option value="sepia(80%) hue-rotate(-10deg) saturate(140%)">Warm Retro</option>
+                    <option value="contrast(140%) saturate(180%)">Cyberpunk Vivid</option>
+                    <option value="hue-rotate(180deg)">Neon Infused</option>
+                    <option value="saturate(0%) brightness(150%) contrast(150%)">High Contrast Noir</option>
+                    <option value="invert(100%)">X-Ray Invert</option>
+                    <option value="blur(2px) saturate(120%)">Dreamy Glow</option>
+                </select>
+
+                <!-- Album Dropdown Selector -->
+                <label>Save Inside Album:</label>
+                <select id="target-album">
+                    <option value="All">Default Album</option>
+                    <option value="Personal">Personal ❤️</option>
+                    <option value="Work">Work 💼</option>
+                    <option value="Fun">Fun 🎉</option>
+                </select>
+
+                <button class="btn-capture" id="capture-btn">⚡ CAPTURE & SAVE</button>
+            </div>
+        </div>
+
+        <!-- Album Gallery Box -->
+        <div class="gallery-panel">
+            <div class="gallery-header">
+                <h2>Saved Gallery</h2>
+                <div class="album-tabs" id="album-tabs">
+                    <div class="tab active" data-album="All">All Items</div>
+                    <div class="tab" data-album="Personal">Personal</div>
+                    <div class="tab" data-album="Work">Work</div>
+                    <div class="tab" data-album="Fun">Fun</div>
+                </div>
+            </div>
+
+            <div class="gallery-grid" id="gallery-grid">
+                <!-- Photos Javascript se render hongi -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Processing Canvas -->
+    <canvas id="canvas" width="800" height="600"></canvas>
+
+    <script>
+        /* JAVASCRIPT CODE START */
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureBtn = document.getElementById('capture-btn');
+        const filterSelect = document.getElementById('filter-select');
+        const targetAlbum = document.getElementById('target-album');
+        const galleryGrid = document.getElementById('gallery-grid');
+        const albumTabs = document.getElementById('album-tabs');
+        const ctx = canvas.getContext('2d');
+
+        // Local Storage Database check
+        let dbPhotos = JSON.parse(localStorage.getItem('studio_photos')) || [];
+        let currentViewAlbum = 'All';
+
+        // Camera Initialization
+        navigator.mediaDevices.getUserMedia({ video: { width: 800, height: 600 }, audio: false })
+            .then(stream => { video.srcObject = stream; })
+            .catch(err => { 
+                alert("Camera access nahi mila! Kripya settings me camera enable karein."); 
+            });
+
+        // Apply Filter Live on Preview
+        filterSelect.addEventListener('change', () => {
+            video.style.filter = filterSelect.value;
+        });
+
+        // Capture Action Function
+        captureBtn.addEventListener('click', () => {
+            ctx.filter = filterSelect.value;
+            
+            // Mirror image rendering logic
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset template canvas
+
+            // Convert Canvas image to high quality base64 format string
+            const base64Image = canvas.toDataURL('image/jpeg', 0.85);
+            
+            // Photo document layout setup
+            const photoObj = {
+                id: 'img_' + Date.now(),
+                src: base64Image,
+                album: targetAlbum.value,
+                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+            };
+
+            dbPhotos.push(photoObj);
+            saveToDatabase();
+            renderGallery();
+        });
+
+        // Sync local storage array to database
+        function saveToDatabase() {
+            localStorage.setItem('studio_photos', JSON.stringify(dbPhotos));
+        }
+
+        // Render dynamic grid elements based on data array 
+        function renderGallery() {
+            galleryGrid.innerHTML = '';
+            
+            const filtered = currentViewAlbum === 'All' 
+                ? dbPhotos 
+                : dbPhotos.filter(p => p.album === currentViewAlbum);
+
+            if(filtered.length === 0) {
+                galleryGrid.innerHTML = `<p style="color:#666; grid-column: 1/-1; text-align:center; padding: 40px 0;">Is album me koi photo nahi hai.</p>`;
+                return;
+            }
+
+            // Loop in reverse format to display newest elements first
+            for(let i = filtered.length - 1; i >= 0; i--) {
+                const item = filtered[i];
+                const card = document.createElement('div');
+                card.className = 'photo-card';
+                card.innerHTML = `
+                    <img src="${item.src}">
+                    <div class="card-details">
+                        <span>📁 ${item.album}</span>
+                        <span>🕒 ${item.time}</span>
+                    </div>
+                    <div class="card-overlay">
+                        <button class="action-btn btn-dl" onclick="downloadItem('${item.src}')">Download</button>
+                        <button class="action-btn btn-del" onclick="deleteItem('${item.id}')">Delete</button>
+                    </div>
+                `;
+                galleryGrid.appendChild(card);
+            }
+        }
+
+        // Action download element function
+        window.downloadItem = function(src) {
+            const a = document.createElement('a');
+            a.href = src;
+            a.download = `Capture_${Date.now()}.jpg`;
+            a.click();
+        };
+
+        // Action delete element function
+        window.deleteItem = function(id) {
+            dbPhotos = dbPhotos.filter(p => p.id !== id);
+            saveToDatabase();
+            renderGallery();
+        };
+
+        // Navigation filter change handler
+        albumTabs.addEventListener('click', (e) => {
+            if(e.target.classList.contains('tab')) {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+                currentViewAlbum = e.target.getAttribute('data-album');
+                renderGallery();
+            }
+        });
+
+        // App Initialization Trigger
+        renderGallery();
+    </script>
+</body>
+</html>
